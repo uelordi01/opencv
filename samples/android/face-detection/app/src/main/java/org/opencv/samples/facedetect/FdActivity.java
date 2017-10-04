@@ -3,6 +3,7 @@ package org.opencv.samples.facedetect;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.media.Image;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -111,7 +112,8 @@ public class FdActivity extends AppCompatActivity  implements org.opencv.android
                         e.printStackTrace();
                         Log.e(TAG, "Failed to load cascade. Exception thrown: " + e);
                     }
-
+                    ImageControllers.getInstance().analizeRotationsForImage(getApplicationContext(),
+                                                                ImageControllers.CAMERA_FACE_FRONT);
                     mOpenCvCameraView.enableView();
                 } break;
                 default:
@@ -184,7 +186,9 @@ public class FdActivity extends AppCompatActivity  implements org.opencv.android
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
-
+        rotateFlipImage(ImageControllers.getInstance().getFlipType(),
+                            ImageControllers.getInstance().getMakeTranspose(),
+                                                    mRgba.getNativeObjAddr());
         if (mAbsoluteFaceSize == 0) {
             int height = mGray.rows();
             if (Math.round(height * mRelativeFaceSize) > 0) {
@@ -203,6 +207,7 @@ public class FdActivity extends AppCompatActivity  implements org.opencv.android
         else if (mDetectorType == NATIVE_DETECTOR) {
             if (mNativeDetector != null)
                 mNativeDetector.detect(mGray, faces);
+            Log.v(LOG_TAG, "native detect");
         }
         else {
             Log.e(TAG, "Detection method is not selected!");
@@ -293,6 +298,8 @@ public class FdActivity extends AppCompatActivity  implements org.opencv.android
         }
 
     }
+
+
     private static final String LOG_TAG ="FdActivity";
 
     static {
@@ -304,4 +311,5 @@ public class FdActivity extends AppCompatActivity  implements org.opencv.android
         }
 
     }
+    public static native void rotateFlipImage(int flip, int makeTranspose, long imgPointerIn);
 }

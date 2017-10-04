@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <android/log.h>
+#include "opencv2/highgui.hpp"
 
 #define LOG_TAG "FaceDetection/DetectionBasedTracker"
 #define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__))
@@ -230,7 +231,8 @@ JNIEXPORT void JNICALL Java_org_opencv_samples_facedetect_DetectionBasedTracker_
     try
     {
         vector<Rect> RectFaces;
-        ((DetectorAgregator*)thiz)->tracker->process(*((Mat*)imageGray));
+        cv::Mat &gray =*(Mat *) imageGray;
+        ((DetectorAgregator*)thiz)->tracker->process(gray);
         ((DetectorAgregator*)thiz)->tracker->getObjects(RectFaces);
         *((Mat*)faces) = Mat(RectFaces, true);
     }
@@ -249,4 +251,23 @@ JNIEXPORT void JNICALL Java_org_opencv_samples_facedetect_DetectionBasedTracker_
         jenv->ThrowNew(je, "Unknown exception in JNI code DetectionBasedTracker.nativeDetect()");
     }
     LOGD("Java_org_opencv_samples_facedetect_DetectionBasedTracker_nativeDetect END");
+}
+
+JNIEXPORT void JNICALL
+Java_org_opencv_samples_facedetect_FdActivity_rotateFlipImage(JNIEnv *env, jclass type,
+                                                              jint flip,
+                                                              jint transpose,
+                                                              jlong imgPointerIn) {
+    LOGD("ROTATING AND FLIPING IMAGE");
+    cv::Mat  &inMat =*(Mat *) imgPointerIn;
+    cv::Mat  outMat;
+    inMat.copyTo(outMat);
+
+//    cv::transpose(inMat, inMat);
+//    if((int) transpose == 1) {
+       cv::transpose(outMat, outMat);
+//    }
+    cv::flip(outMat, outMat,(int) flip);
+//    inMat = outMat;
+
 }

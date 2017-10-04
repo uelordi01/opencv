@@ -16,6 +16,8 @@ android {
                 arguments "-DOpenCV_DIR=" + getOpenCVDir().toString()+"/sdk/native/jni",
                         "-DANDROID_ARM_NEON=TRUE"
 
+
+
             }
         }
     }
