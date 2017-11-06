@@ -18,8 +18,8 @@ import utils.PrivateFileRW;
 public class ObjectDetectionHandler {
 
 
-    public static final String DEFAULT_DEPLOY_FILENAME= "gazenet.prototxt";
-    public static final String DEFAULT_MOBILENET_FILENAME= "gazenet.caffemodel";
+    public static final String DEFAULT_DEPLOY_FILENAME= "mobile_net_ssd_deploy.prototxt";
+    public static final String DEFAULT_MOBILENET_FILENAME= "mobile_net_ssd_deploy_weights.caffemodel";
     private long mNativeObj = 0;
     private String m_filePath;
     private static ObjectDetectionHandler _instance = null;
@@ -55,8 +55,8 @@ public class ObjectDetectionHandler {
             PrivateFileRW privateFileHandler = new PrivateFileRW(context);
             Map<Integer,String> resources = new HashMap<Integer,String>();
             // 3D models
-        resources.put(R.raw.gazenet_caffe,"gazenet.prototxt");
-        resources.put(R.raw.gazenet,"gazenet.caffemodel");
+        resources.put(R.raw.mobile_net_ssd_deploy, DEFAULT_DEPLOY_FILENAME);
+        resources.put(R.raw.mobile_net_ssd_deploy_weights, DEFAULT_MOBILENET_FILENAME);
 
 //        resources.put(R.raw.new_candide_v02_updated_nopatch,"new_candide_v02_updated_nopatch.wfm");
 

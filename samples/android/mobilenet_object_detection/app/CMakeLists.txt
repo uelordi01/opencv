@@ -15,7 +15,9 @@ add_library( # Sets the name of the library.
 
              # Provides a relative path to your source file(s).
              src/main/cpp/native-lib.h
-             src/main/cpp/native-lib.cpp )
+             src/main/cpp/native-lib.cpp
+             src/main/cpp/FPSCounter.h
+             src/main/cpp/FPSCounter.cpp )
 
 
 target_link_libraries( # Specifies the target library.

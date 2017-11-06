@@ -1,6 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+        config {
+            keyAlias 'Testing key'
+            keyPassword 'Vicomtech1'
+            storeFile file('/home/VICOMTECH/uelordi/proyectos/SwitchTrackingEngine/kanvas_tracker/kt/apps/androidApp/keystores/TestingKeyStore.jks')
+            storePassword 'Vicomtech1'
+        }
+    }
     compileSdkVersion 25
     buildToolsVersion "26.0.0"
     defaultConfig {
@@ -23,7 +31,17 @@ android {
     buildTypes {
         release {
             minifyEnabled false
+//            signingConfig = $("signingConfigs.signRelease")
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            debuggable false
+            jniDebuggable false
+            externalNativeBuild {
+                cmake {
+                    // cmake Debug build type uses -O0, which makes the code slow.
+                    arguments "-DCMAKE_BUILD_TYPE=Release"
+                }
+            }
+            signingConfig signingConfigs.config
         }
     }
     externalNativeBuild {
@@ -37,7 +55,6 @@ android {
 //            jniLibs.srcDirs += getOpenCVDir().toString()+"/sdk/native/libs"
         }
     }
-
 }
 
 def getOpenCVDir() {
@@ -52,14 +69,13 @@ def getOpenCVDir() {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-
-//    compile project(':openCVLibrary330')
+    //    compile project(':openCVLibrary330')
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     testCompile 'junit:junit:4.12'
-    compile 'com.github.uelordi01:Opencv-Android-3.3-gradle:master-SNAPSHOT'
+    compile 'com.github.uelordi01:Opencv-Android-3.3-gradle:1.1'
 }

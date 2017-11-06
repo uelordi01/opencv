@@ -33,7 +33,9 @@ public class MainActivity extends AppCompatActivity implements org.opencv.androi
         askPermissions();
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.fd_activity_surface_view);
         mOpenCvCameraView.setVisibility(CameraBridgeViewBase.VISIBLE);
+        mOpenCvCameraView.setMaxFrameSize(640, 480);
         mOpenCvCameraView.setCvCameraViewListener(this);
+
     }
 
     @Override

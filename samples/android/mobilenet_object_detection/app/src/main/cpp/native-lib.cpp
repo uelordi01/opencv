@@ -2,7 +2,6 @@
 #include <string>
 #include "native-lib.h"
 
-
 #include <string>
 #include <vector>
 
@@ -81,8 +80,8 @@ Java_org_opencv_samples_mobilenet_ObjectDetectionHandler_processFrame(JNIEnv *en
     Size cropSize;
     if (inputImg.cols / (float)inputImg.rows > mDnnConfig.WHRatio)
     {
-        cropSize = Size(static_cast<int>(inputImg.rows * mDnnConfig.WHRatio),
-                        inputImg.cols);
+        cropSize = Size(
+                        inputImg.cols, static_cast<int>(inputImg.rows * mDnnConfig.WHRatio));
     }
     else
     {
@@ -107,7 +106,7 @@ Java_org_opencv_samples_mobilenet_ObjectDetectionHandler_processFrame(JNIEnv *en
     //    double time = neuralNetwork.getPerfProfile(layersTimings) / freq;
     //    neuralNetwork << "Inference time, ms: " << time << endl;
     Mat detectionMat(detection.size[2], detection.size[3], CV_32F, detection.ptr<float>());
-    inputImg = inputImg(crop);
+    Mat croppedImg = inputImg(crop);
 
     float confidenceThreshold = 0.2f;
     for(int i = 0; i < detectionMat.rows; i++)
@@ -118,10 +117,10 @@ Java_org_opencv_samples_mobilenet_ObjectDetectionHandler_processFrame(JNIEnv *en
         {
             size_t objectClass = (size_t)(detectionMat.at<float>(i, 1));
 
-            int xLeftBottom = static_cast<int>(detectionMat.at<float>(i, 3) * inputImg.cols);
-            int yLeftBottom = static_cast<int>(detectionMat.at<float>(i, 4) * inputImg.rows);
-            int xRightTop = static_cast<int>(detectionMat.at<float>(i, 5) * inputImg.cols);
-            int yRightTop = static_cast<int>(detectionMat.at<float>(i, 6) * inputImg.rows);
+            int xLeftBottom = static_cast<int>(detectionMat.at<float>(i, 3) * croppedImg.cols);
+            int yLeftBottom = static_cast<int>(detectionMat.at<float>(i, 4) * croppedImg.rows);
+            int xRightTop = static_cast<int>(detectionMat.at<float>(i, 5) * croppedImg.cols);
+            int yRightTop = static_cast<int>(detectionMat.at<float>(i, 6) * croppedImg.rows);
 
             ostringstream ss;
             ss << confidence;
@@ -131,14 +130,14 @@ Java_org_opencv_samples_mobilenet_ObjectDetectionHandler_processFrame(JNIEnv *en
                         (int)(xRightTop - xLeftBottom),
                         (int)(yRightTop - yLeftBottom));
 
-            rectangle(inputImg, object, Scalar(0, 255, 0));
+            rectangle(croppedImg, object, Scalar(0, 255, 0));
             String label = String(mDnnConfig.classNames[objectClass]) + ": " + conf;
             int baseLine = 0;
             Size labelSize = getTextSize(label, FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
-            rectangle(inputImg, Rect(Point(xLeftBottom, yLeftBottom - labelSize.height),
+            rectangle(croppedImg, Rect(Point(xLeftBottom, yLeftBottom - labelSize.height),
                                   Size(labelSize.width, labelSize.height + baseLine)),
                       Scalar(255, 255, 255), CV_FILLED);
-            putText(inputImg, label, Point(xLeftBottom, yLeftBottom),
+            putText(croppedImg, label, Point(xLeftBottom, yLeftBottom),
                     FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0,0,0));
         }
     }
