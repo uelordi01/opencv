@@ -1814,7 +1814,7 @@ void line( InputOutputArray _img, Point pt1, Point pt2, const Scalar& color,
     if( line_type == CV_AA && img.depth() != CV_8U )
         line_type = 8;
 
-    CV_Assert( 0 <= thickness && thickness <= MAX_THICKNESS );
+    CV_Assert( 0 < thickness && thickness <= MAX_THICKNESS );
     CV_Assert( 0 <= shift && shift <= XY_SHIFT );
 
     double buf[4];
@@ -2362,6 +2362,17 @@ Size getTextSize( const String& text, int fontFace, double fontScale, int thickn
     if( _base_line )
         *_base_line = cvRound(base_line*fontScale + thickness*0.5);
     return size;
+}
+
+double getFontScaleFromHeight(const int fontFace, const int pixelHeight, const int thickness)
+{
+    // By https://stackoverflow.com/a/27898487/1531708
+    const int* ascii = getFontData(fontFace);
+
+    int base_line = (ascii[0] & 15);
+    int cap_line = (ascii[0] >> 4) & 15;
+
+    return static_cast<double>(pixelHeight - static_cast<double>((thickness + 1)) / 2.0) / static_cast<double>(cap_line + base_line);
 }
 
 }

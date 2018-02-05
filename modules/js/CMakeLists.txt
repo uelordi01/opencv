@@ -32,13 +32,14 @@ endforeach(m)
 # header blacklist
 ocv_list_filterout(opencv_hdrs "modules/.*.h$")
 ocv_list_filterout(opencv_hdrs "modules/core/.*/cuda")
+ocv_list_filterout(opencv_hdrs "modules/core/.*/opencl")
 ocv_list_filterout(opencv_hdrs "modules/core/include/opencv2/core/opengl.hpp")
 ocv_list_filterout(opencv_hdrs "modules/core/include/opencv2/core/ocl.hpp")
 ocv_list_filterout(opencv_hdrs "modules/cuda.*")
 ocv_list_filterout(opencv_hdrs "modules/cudev")
 ocv_list_filterout(opencv_hdrs "modules/core/.*/hal/")
 ocv_list_filterout(opencv_hdrs "modules/.*/detection_based_tracker.hpp") # Conditional compilation
-ocv_list_filterout(opencv_hdrs "modules/core/include/opencv2/core/utils/trace.*.hpp")
+ocv_list_filterout(opencv_hdrs "modules/core/include/opencv2/core/utils/.*")
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/headers.txt" "${opencv_hdrs}")
 

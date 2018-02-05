@@ -80,6 +80,18 @@ Mutex* __initialization_mutex_initializer = &getInitializationMutex();
 #  include <cpu-features.h>
 #endif
 
+#ifndef __VSX__
+# if defined __PPC64__ && defined __linux__
+#   include "sys/auxv.h"
+#   ifndef AT_HWCAP2
+#     define AT_HWCAP2 26
+#   endif
+#   ifndef PPC_FEATURE2_ARCH_2_07
+#     define PPC_FEATURE2_ARCH_2_07 0x80000000
+#   endif
+# endif
+#endif
+
 #if defined _WIN32 || defined WINCE
 #ifndef _WIN32_WINNT           // This is needed for the declaration of TryEnterCriticalSection in winbase.h with Visual Studio 2005 (and older?)
   #define _WIN32_WINNT 0x0400  // http://msdn.microsoft.com/en-us/library/ms686857(VS.85).aspx
@@ -203,7 +215,7 @@ std::wstring GetTempFileNameWinRT(std::wstring prefix)
 #include "omp.h"
 #endif
 
-#if defined __linux__ || defined __APPLE__ || defined __EMSCRIPTEN__ || defined __FreeBSD__ || defined __HAIKU__
+#if defined __linux__ || defined __APPLE__ || defined __EMSCRIPTEN__ || defined __FreeBSD__ || defined __GLIBC__ || defined __HAIKU__
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -237,9 +249,9 @@ const char* Exception::what() const throw() { return msg.c_str(); }
 void Exception::formatMessage()
 {
     if( func.size() > 0 )
-        msg = format("%s:%d: error: (%d) %s in function %s\n", file.c_str(), line, code, err.c_str(), func.c_str());
+        msg = format("OpenCV(%s) %s:%d: error: (%d) %s in function %s\n", CV_VERSION, file.c_str(), line, code, err.c_str(), func.c_str());
     else
-        msg = format("%s:%d: error: (%d) %s\n", file.c_str(), line, code, err.c_str());
+        msg = format("OpenCV(%s) %s:%d: error: (%d) %s\n", CV_VERSION, file.c_str(), line, code, err.c_str());
 }
 
 static const char* g_hwFeatureNames[CV_HARDWARE_MAX_FEATURE] = { NULL };
@@ -289,12 +301,16 @@ struct HWFeatures
         g_hwFeatureNames[CPU_AVX_512CD] = "AVX512CD";
         g_hwFeatureNames[CPU_AVX_512DQ] = "AVX512DQ";
         g_hwFeatureNames[CPU_AVX_512ER] = "AVX512ER";
-        g_hwFeatureNames[CPU_AVX_512IFMA512] = "AVX512IFMA";
+        g_hwFeatureNames[CPU_AVX_512IFMA] = "AVX512IFMA";
         g_hwFeatureNames[CPU_AVX_512PF] = "AVX512PF";
         g_hwFeatureNames[CPU_AVX_512VBMI] = "AVX512VBMI";
         g_hwFeatureNames[CPU_AVX_512VL] = "AVX512VL";
 
         g_hwFeatureNames[CPU_NEON] = "NEON";
+
+        g_hwFeatureNames[CPU_VSX] = "VSX";
+
+        g_hwFeatureNames[CPU_AVX512_SKX] = "AVX512-SKX";
     }
 
     void initialize(void)
@@ -442,6 +458,11 @@ struct HWFeatures
                 have[CV_CPU_AVX_512VBMI] = false;
                 have[CV_CPU_AVX_512VL] = false;
             }
+
+            if (have[CV_CPU_AVX_512F])
+            {
+                have[CV_CPU_AVX512_SKX] = have[CV_CPU_AVX_512F] & have[CV_CPU_AVX_512CD] & have[CV_CPU_AVX_512BW] & have[CV_CPU_AVX_512DQ] & have[CV_CPU_AVX_512VL];
+            }
         }
     #else
         CV_UNUSED(cpuid_data);
@@ -502,6 +523,16 @@ struct HWFeatures
     #if (defined __ARM_FP  && (((__ARM_FP & 0x2) != 0) && defined __ARM_NEON__))
         have[CV_CPU_FP16] = true;
     #endif
+    #endif
+
+    #ifdef __VSX__
+        have[CV_CPU_VSX] = true;
+    #elif (defined __PPC64__ && defined __linux__)
+        uint64 hwcaps = getauxval(AT_HWCAP);
+        uint64 hwcap2 = getauxval(AT_HWCAP2);
+        have[CV_CPU_VSX] = (hwcaps & PPC_FEATURE_PPC_LE && hwcaps & PPC_FEATURE_HAS_VSX && hwcap2 & PPC_FEATURE2_ARCH_2_07);
+    #else
+        have[CV_CPU_VSX] = false;
     #endif
 
         int baseline_features[] = { CV_CPU_BASELINE_FEATURES };
@@ -632,6 +663,11 @@ bool checkHardwareSupport(int feature)
     return currentFeatures->have[feature];
 }
 
+String getHardwareFeatureName(int feature)
+{
+    const char* name = getHWFeatureName(feature);
+    return name ? String(name) : String();
+}
 
 volatile bool useOptimizedFlag = true;
 
@@ -921,7 +957,8 @@ void error( const Exception& exc )
         char buf[1 << 12];
 
         cv_snprintf(buf, sizeof(buf),
-            "OpenCV Error: %s (%s) in %s, file %s, line %d",
+            "OpenCV(%s) Error: %s (%s) in %s, file %s, line %d",
+            CV_VERSION,
             errorStr, exc.err.c_str(), exc.func.size() > 0 ?
             exc.func.c_str() : "unknown function", exc.file.c_str(), exc.line);
         fprintf( stderr, "%s\n", buf );
@@ -937,7 +974,7 @@ void error( const Exception& exc )
         *p = 0;
     }
 
-    throw exc;
+    CV_THROW(exc);
 }
 
 void error(int _code, const String& _err, const char* _func, const char* _file, int _line)
