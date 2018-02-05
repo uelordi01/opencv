@@ -7,7 +7,7 @@ add_custom_target(opencv_android_examples)
 ocv_warnings_disable(CMAKE_CXX_FLAGS -Wmissing-declarations)
 
 add_subdirectory(15-puzzle)
-add_subdirectory(face-detection)
+# add_subdirectory(face-detection)
 add_subdirectory(image-manipulations)
 add_subdirectory(camera-calibration)
 add_subdirectory(color-blob-detection)
